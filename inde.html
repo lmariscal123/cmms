@@ -1,1 +1,535 @@
-<h1>Girhub pages CMMS</h1>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control Avanzado: Plan Estratégico Proyecto Aurum</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate & Amber -->
+    <!-- Application Structure Plan: A professional dashboard layout with a fixed sidebar for primary navigation and a dynamic main content area. This structure allows users to easily switch between different facets of the plan (strategic overview, KPIs, timeline, architecture, security) without losing context. The flow is designed for executive review: 1. Dashboard (high-level summary), 2. Strategic Analysis (the 'why'), 3. Action Plan (the 'how' and 'when'), 4. Technology (the 'with what'), 5. Governance (the 'how we protect it'). This non-linear, topic-driven navigation is superior for comprehension and decision-making compared to a simple scrollable page. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: High-level project goals (time reduction, accuracy). Goal: Inform at a glance. Viz: Large-font "Stat Cards". Interaction: None. Justification: Quick, digestible summary for executives. Library/Method: HTML/Tailwind.
+        - Report Info: Project Timeline. Goal: Show sequence and details. Viz: Interactive vertical timeline. Interaction: Click on a phase to display its detailed objectives, activities, and deliverables in a separate panel. Justification: Connects high-level phases to concrete actions, making the plan tangible. Library/Method: HTML/JS.
+        - Report Info: Technology Stack. Goal: Explain technical choices. Viz: Grid of technology cards. Interaction: Click on a card to open a modal with a detailed explanation (Why this tech?). Justification: Provides layered information, satisfying both high-level and technical audiences without cluttering the UI. Library/Method: HTML/JS.
+        - Report Info: Risk Mitigation. Goal: Demonstrate value/security. Viz: Radar Chart. Interaction: Hover to see risk levels. Justification: A visually compelling way to show the "before" and "after" state of business risks, directly tying the project to risk reduction. Library/Method: Chart.js.
+        - Report Info: KPIs. Goal: Quantify success. Viz: Bar and Doughnut charts. Interaction: Standard Chart.js tooltips. Justification: Classic, effective visualizations for quantitative goals. Library/Method: Chart.js.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .sidebar-link { transition: all 0.2s ease-in-out; }
+        .sidebar-link.active, .sidebar-link:hover { background-color: #f59e0b; color: #ffffff; }
+        .main-content > section { display: none; }
+        .main-content > section.active { display: block; }
+        .stat-card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+        .timeline-item { border-left: 3px solid #cbd5e1; }
+        .timeline-item.active { border-left-color: #f59e0b; }
+        .timeline-dot { transition: background-color 0.2s ease-in-out; }
+        .timeline-item.active .timeline-dot { background-color: #f59e0b; }
+        .tech-card { transition: all 0.2s ease-in-out; }
+        .tech-card:hover { transform: scale(1.05); border-color: #f59e0b; }
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            transform: translateY(-50px);
+            transition: transform 0.3s ease-in-out;
+        }
+        .modal-backdrop.visible { display: flex; opacity: 1; }
+        .modal-backdrop.visible .modal-content { transform: translateY(0); }
+        .section-fade-in {
+            animation: fadeIn 0.7s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex h-screen bg-slate-100 text-slate-800">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-slate-800 text-slate-300 p-6 flex-col justify-between hidden md:flex">
+        <div>
+            <div class="mb-10">
+                <h1 class="text-2xl font-bold text-white">Proyecto Aurum</h1>
+                <p class="text-sm text-amber-400">Panel de Control Estratégico</p>
+            </div>
+            <nav id="sidebar-nav" class="flex flex-col space-y-3">
+                <a href="#dashboard" class="sidebar-link active flex items-center p-3 rounded-lg">
+                    <span class="text-xl mr-4">📊</span> Resumen Ejecutivo
+                </a>
+                <a href="#analisis" class="sidebar-link flex items-center p-3 rounded-lg">
+                    <span class="text-xl mr-4">🎯</span> Análisis Estratégico
+                </a>
+                <a href="#plan" class="sidebar-link flex items-center p-3 rounded-lg">
+                    <span class="text-xl mr-4">🗺️</span> Plan de Acción y KPIs
+                </a>
+                <a href="#arquitectura" class="sidebar-link flex items-center p-3 rounded-lg">
+                    <span class="text-xl mr-4">🏗️</span> Arquitectura Tecnológica
+                </a>
+                <a href="#seguridad" class="sidebar-link flex items-center p-3 rounded-lg">
+                    <span class="text-xl mr-4">🛡️</span> Gobernanza y Seguridad
+                </a>
+            </nav>
+        </div>
+        <div class="text-xs text-slate-500">
+            &copy; 2025 CMMS Enterprise S.A.
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 md:p-8 overflow-y-auto main-content">
+        
+        <!-- Section: Dashboard -->
+        <section id="dashboard" class="active section-fade-in">
+            <h2 class="text-3xl font-extrabold text-slate-900 mb-4">Resumen Ejecutivo</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-xl font-bold text-slate-800 mb-3">Resumen Gerencial del Plan</h3>
+                <div class="text-slate-600 space-y-3 text-sm md:text-base">
+                    <p>
+                        Este documento presenta el plan estratégico para el desarrollo del **"Proyecto Aurum"**, una iniciativa para transformar nuestro servicio de optimización del maestro de materiales en una solución tecnológica propia, impulsada por Inteligencia Artificial. Actualmente, nuestros procesos manuales, aunque efectivos, consumen un 60-70% del esfuerzo en tareas repetitivas, limitando nuestra escalabilidad y agilidad.
+                    </p>
+                    <p>
+                        "Aurum" automatizará la catalogación, clasificación y detección de duplicados, y habilitará una innovadora interfaz de consulta en lenguaje natural para nuestros clientes. La implementación de este plan nos permitirá **reducir los tiempos de proyecto en un 40-60%**, alcanzar una **precisión de datos superior al 98%** y abrir **nuevas líneas de negocio SaaS**, reforzando nuestro liderazgo en el mercado.
+                    </p>
+                    <p>
+                        Este proyecto no es solo una mejora operativa; es la construcción de un activo estratégico que garantizará la competitividad y el crecimiento de CMMS en la próxima década.
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-slate-500 font-semibold">Reducción de Tiempo</h3>
+                    <p class="text-3xl font-bold text-green-600">40-60%</p>
+                    <p class="text-sm text-slate-400">En procesamiento de datos</p>
+                </div>
+                <div class="stat-card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-slate-500 font-semibold">Precisión de Datos</h3>
+                    <p class="text-3xl font-bold text-blue-600">>98%</p>
+                    <p class="text-sm text-slate-400">En clasificación automática</p>
+                </div>
+                <div class="stat-card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-slate-500 font-semibold">Nuevos Servicios</h3>
+                    <p class="text-3xl font-bold text-amber-600">SaaS</p>
+                    <p class="text-sm text-slate-400">Consulta con Lenguaje Natural</p>
+                </div>
+                <div class="stat-card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-slate-500 font-semibold">Estado del Proyecto</h3>
+                    <p class="text-xl font-bold text-slate-700">Fase 1: MVP Interno</p>
+                    <div class="w-full bg-slate-200 rounded-full h-2.5 mt-2">
+                        <div class="bg-amber-500 h-2.5 rounded-full" style="width: 25%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <div class="lg:col-span-3 bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4">Mitigación de Riesgos del Negocio</h3>
+                    <p class="text-sm text-slate-600 mb-4">El proyecto Aurum reduce drásticamente los riesgos operativos, financieros y de datos asociados a una mala gestión del maestro de materiales.</p>
+                    <div class="chart-container h-80 max-h-80">
+                        <canvas id="riskChart"></canvas>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-4">Beneficios Clave</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="text-green-500 text-xl mr-3">✔</span>
+                            <div>
+                                <h4 class="font-semibold">Agilidad Operativa</h4>
+                                <p class="text-sm text-slate-500">Reduce el tiempo de búsqueda de repuestos y optimiza las compras.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 text-xl mr-3">✔</span>
+                            <div>
+                                <h4 class="font-semibold">Toma de Decisiones Basada en Datos</h4>
+                                <p class="text-sm text-slate-500">Proporciona una "única fuente de verdad" para análisis confiables.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 text-xl mr-3">✔</span>
+                            <div>
+                                <h4 class="font-semibold">Ventaja Competitiva</h4>
+                                <p class="text-sm text-slate-500">Posiciona a CMMS como líder en innovación tecnológica para la gestión de activos.</p>
+                            </div>
+                        </li>
+                         <li class="flex items-start">
+                            <span class="text-green-500 text-xl mr-3">✔</span>
+                            <div>
+                                <h4 class="font-semibold">Reducción de Costos</h4>
+                                <p class="text-sm text-slate-500">Minimiza el exceso de inventario y las compras duplicadas.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Analisis Estratégico -->
+        <section id="analisis" class="section-fade-in">
+            <h2 class="text-3xl font-extrabold text-slate-900 mb-6">Análisis Estratégico: El Porqué del Cambio</h2>
+            <p class="max-w-4xl text-slate-600 mb-8">El 60-70% del esfuerzo en la gestión de materiales se pierde en tareas manuales y repetitivas. Esto no solo es ineficiente, sino que introduce errores que cuestan dinero y tiempo. "Aurum" ataca la raíz de este problema, transformando el proceso fundamentalmente.</p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-lg shadow-md border-l-4 border-red-500">
+                    <h3 class="text-2xl font-bold mb-4">El Problema: El Ciclo Vicioso Manual</h3>
+                    <ul class="space-y-3">
+                        <li class="flex"><span class="mr-3">❌</span> <strong>Datos de Baja Calidad:</strong> Duplicados, errores y omisiones.</li>
+                        <li class="flex"><span class="mr-3">❌</span> <strong>Procesos Reactivos:</strong> Búsquedas manuales y compras urgentes.</li>
+                        <li class="flex"><span class="mr-3">❌</span> <strong>Falta de Tiempo para Gobernar:</strong> El personal está demasiado ocupado apagando incendios.</li>
+                        <li class="flex"><span class="mr-3">❌</span> <strong>Costos Ocultos:</strong> Exceso de inventario, paradas de producción, compras incorrectas.</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-md border-l-4 border-green-500">
+                    <h3 class="text-2xl font-bold mb-4">La Solución: El Círculo Virtuoso con IA</h3>
+                    <ul class="space-y-3">
+                        <li class="flex"><span class="mr-3">✅</span> <strong>Automatización Inteligente:</strong> La IA se encarga de la clasificación y detección de duplicados.</li>
+                        <li class="flex"><span class="mr-3">✅</span> <strong>Liberación de Recursos:</strong> El personal se enfoca en tareas de alto valor y gobernanza.</li>
+                        <li class="flex"><span class="mr-3">✅</span> <strong>Mejora Continua de Datos:</strong> La gobernanza proactiva asegura la calidad a largo plazo.</li>
+                        <li class="flex"><span class="mr-3">✅</span> <strong>Valor Estratégico:</strong> Eficiencia, reducción de costos y mejores decisiones.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Plan de Acción y KPIs -->
+        <section id="plan" class="section-fade-in">
+            <h2 class="text-3xl font-extrabold text-slate-900 mb-6">Plan de Acción y KPIs</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1">
+                    <h3 class="text-xl font-bold mb-4">Línea de Tiempo del Proyecto</h3>
+                    <div id="timeline-container" class="relative pl-8 space-y-10">
+                        <!-- Timeline items will be injected by JS -->
+                    </div>
+                </div>
+                <div class="lg:col-span-2 bg-white p-8 rounded-lg shadow-md">
+                    <div id="phase-details-container">
+                        <!-- Phase details will be injected by JS -->
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 border-t pt-6">
+                        <div>
+                            <h4 class="text-lg font-semibold mb-2">KPI: Eficiencia Operativa</h4>
+                            <div class="chart-container h-64 max-h-64">
+                                <canvas id="efficiencyChart"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-semibold mb-2">KPI: Calidad de Datos</h4>
+                            <div class="chart-container h-64 max-h-64">
+                                <canvas id="qualityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Arquitectura Tecnológica -->
+        <section id="arquitectura" class="section-fade-in">
+            <h2 class="text-3xl font-extrabold text-slate-900 mb-6">Arquitectura Tecnológica</h2>
+            <p class="max-w-4xl text-slate-600 mb-8">Utilizaremos un stack tecnológico moderno, de código abierto y modular para garantizar la flexibilidad, escalabilidad y soberanía de los datos. Haga clic en cada componente para más detalles.</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div data-tech="FastAPI" class="tech-card cursor-pointer bg-white p-6 rounded-lg shadow-md border-2 border-transparent text-center">
+                    <h3 class="text-lg font-bold">Backend y API</h3>
+                    <p class="text-3xl my-2">🚀</p>
+                    <p class="font-semibold text-amber-600">FastAPI</p>
+                </div>
+                 <div data-tech="SVM" class="tech-card cursor-pointer bg-white p-6 rounded-lg shadow-md border-2 border-transparent text-center">
+                    <h3 class="text-lg font-bold">Clasificación</h3>
+                    <p class="text-3xl my-2">🏷️</p>
+                    <p class="font-semibold text-amber-600">SVM</p>
+                </div>
+                <div data-tech="Clustering" class="tech-card cursor-pointer bg-white p-6 rounded-lg shadow-md border-2 border-transparent text-center">
+                    <h3 class="text-lg font-bold">Detección Duplicados</h3>
+                    <p class="text-3xl my-2">👥</p>
+                    <p class="font-semibold text-amber-600">K-Means</p>
+                </div>
+                <div data-tech="LLM" class="tech-card cursor-pointer bg-white p-6 rounded-lg shadow-md border-2 border-transparent text-center">
+                    <h3 class="text-lg font-bold">Consulta Lenguaje Natural</h3>
+                    <p class="text-3xl my-2">💬</p>
+                    <p class="font-semibold text-amber-600">LLM (RAG)</p>
+                </div>
+                <div data-tech="PostgreSQL" class="tech-card cursor-pointer bg-white p-6 rounded-lg shadow-md border-2 border-transparent text-center">
+                    <h3 class="text-lg font-bold">Base de Datos</h3>
+                    <p class="text-3xl my-2">🐘</p>
+                    <p class="font-semibold text-amber-600">PostgreSQL</p>
+                </div>
+                <div data-tech="Docker" class="tech-card cursor-pointer bg-white p-6 rounded-lg shadow-md border-2 border-transparent text-center">
+                    <h3 class="text-lg font-bold">Contenerización</h3>
+                    <p class="text-3xl my-2">🐳</p>
+                    <p class="font-semibold text-amber-600">Docker</p>
+                </div>
+                <div data-tech="React" class="tech-card cursor-pointer bg-white p-6 rounded-lg shadow-md border-2 border-transparent text-center">
+                    <h3 class="text-lg font-bold">Frontend</h3>
+                    <p class="text-3xl my-2">⚛️</p>
+                    <p class="font-semibold text-amber-600">React / Vue</p>
+                </div>
+                 <div data-tech="Scikit-learn" class="tech-card cursor-pointer bg-white p-6 rounded-lg shadow-md border-2 border-transparent text-center">
+                    <h3 class="text-lg font-bold">Librería de ML</h3>
+                    <p class="text-3xl my-2">⚙️</p>
+                    <p class="font-semibold text-amber-600">Scikit-learn</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Gobernanza y Seguridad -->
+        <section id="seguridad" class="section-fade-in">
+            <h2 class="text-3xl font-extrabold text-slate-900 mb-6">Gobernanza y Seguridad: La Fortaleza Aurum</h2>
+            <p class="max-w-4xl text-slate-600 mb-8">La confianza es nuestro activo más importante. Hemos diseñado una estrategia de seguridad de múltiples capas para proteger los datos de nuestros clientes en cada punto del sistema.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-3"><span class="text-2xl mr-4">🗄️</span><h4 class="font-semibold text-lg">Aislamiento de Datos</h4></div>
+                    <p class="text-slate-600 text-sm">Cada cliente tiene su propia base de datos aislada, eliminando cualquier riesgo de fuga de datos entre clientes.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-3"><span class="text-2xl mr-4">🛡️</span><h4 class="font-semibold text-lg">Mínimo Privilegio</h4></div>
+                    <p class="text-slate-600 text-sm">La IA opera con usuarios de base de datos de "solo lectura" para las consultas, mitigando riesgos de modificación de datos.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-3"><span class="text-2xl mr-4">🚦</span><h4 class="font-semibold text-lg">Cortafuegos de Consultas</h4></div>
+                    <p class="text-slate-600 text-sm">Nuestra API inspecciona y bloquea explícitamente cualquier comando SQL destructivo (`DELETE`, `DROP`, etc.) antes de su ejecución.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-3"><span class="text-2xl mr-4">🔐</span><h4 class="font-semibold text-lg">Control de Acceso Fuerte</h4></div>
+                    <p class="text-slate-600 text-sm">Autenticación robusta y roles definidos para empleados y clientes, asegurando que cada usuario solo vea lo que le corresponde.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-3"><span class="text-2xl mr-4">🏢</span><h4 class="font-semibold text-lg">Soberanía de Datos</h4></div>
+                    <p class="text-slate-600 text-sm">Auto-alojamiento de modelos de código abierto para tener control total y cumplir con las políticas de confidencialidad más estrictas.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                     <div class="flex items-center mb-3"><span class="text-2xl mr-4">🔄</span><h4 class="font-semibold text-lg">Validación Humana</h4></div>
+                    <p class="text-slate-600 text-sm">El sistema "humano en el bucle" asegura que un experto de CMMS valide las sugerencias de la IA, combinando velocidad con experiencia.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal -->
+    <div id="tech-modal" class="modal-backdrop items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-lg p-6 rounded-lg shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-2xl font-bold"></h3>
+                <button id="modal-close" class="text-2xl text-slate-500 hover:text-slate-800">&times;</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- DATA ---
+        const phaseData = {
+            '1': {
+                title: 'Fase 1: Desarrollo del MVP Interno',
+                duration: '3 Meses',
+                objective: 'Construir una herramienta funcional para uso interno que valide la tecnología y acelere nuestros proyectos actuales.',
+                activities: [
+                    'Consolidar y limpiar datos de 3-5 proyectos anteriores para entrenamiento.',
+                    'Desarrollar modelos iniciales de clasificación (SVM) y clustering (K-Means).',
+                    'Crear la API Backend (FastAPI) para procesar archivos.',
+                    'Desarrollar interfaz de validación interna para ingenieros de CMMS.'
+                ],
+                deliverable: 'Prototipo funcional interno "Aurum MVP".'
+            },
+            '2': {
+                title: 'Fase 2: Prueba Piloto y Refinamiento',
+                duration: '2 Meses',
+                objective: 'Probar "Aurum MVP" en un proyecto real con un cliente de confianza y desarrollar la interfaz de consulta.',
+                activities: [
+                    'Seleccionar un cliente piloto estratégico para un caso de estudio.',
+                    'Ejecutar un proyecto real usando Aurum, midiendo KPIs.',
+                    'Construir y probar el módulo de consulta en lenguaje natural (RAG).',
+                    'Recopilar feedback directo del cliente sobre la nueva funcionalidad.'
+                ],
+                deliverable: 'Versión Beta de "Aurum" con módulo de consulta y primer caso de estudio.'
+            },
+            '3': {
+                title: 'Fase 3: Productización y Lanzamiento',
+                duration: '1 Mes',
+                objective: 'Empaquetar "Aurum" como un nuevo y revolucionario servicio comercial de CMMS.',
+                activities: [
+                    'Definir nuevos paquetes de servicio: Standard, Premium y Enterprise.',
+                    'Desarrollar material de marketing, incluyendo demos y casos de estudio.',
+                    'Capacitar a los equipos comercial y técnico en la nueva oferta.',
+                    'Lanzamiento oficial de la línea de servicios "Aurum" al mercado peruano.'
+                ],
+                deliverable: 'Nuevos paquetes de servicio y campaña de lanzamiento.'
+            }
+        };
+
+        const techData = {
+            'FastAPI': { title: 'FastAPI', body: '<p><strong>Rol:</strong> Backend y API.</p><p><strong>Por qué fue elegido:</strong> Es un framework de Python moderno y de alto rendimiento, ideal para construir APIs rápidas y eficientes para servir modelos de Machine Learning. Su soporte asíncrono y la generación automática de documentación aceleran el desarrollo.</p>' },
+            'SVM': { title: 'Máquinas de Vectores de Soporte (SVM)', body: '<p><strong>Rol:</strong> Clasificación automática de materiales.</p><p><strong>Por qué fue elegido:</strong> Es un algoritmo de aprendizaje supervisado muy robusto y eficaz para la clasificación de texto, incluso con descripciones complejas. Ideal para asignar categorías a nuevos materiales con alta precisión.</p>' },
+            'Clustering': { title: 'K-Means Clustering', body: '<p><strong>Rol:</strong> Detección de duplicados y similitudes.</p><p><strong>Por qué fue elegido:</strong> Es un algoritmo no supervisado rápido y eficiente para agrupar grandes volúmenes de materiales basándose en la similitud de sus descripciones, identificando así posibles duplicados para revisión humana.</p>' },
+            'LLM': { title: 'Modelos de Lenguaje Grandes (LLM)', body: '<p><strong>Rol:</strong> Consulta en Lenguaje Natural (Arquitectura RAG).</p><p><strong>Por qué fue elegido:</strong> Permiten a los usuarios no técnicos "hablar" con la base de datos. La arquitectura RAG (Retrieval-Augmented Generation) garantiza que el LLM genere consultas SQL precisas y seguras, democratizando el acceso a los datos.</p>' },
+            'PostgreSQL': { title: 'PostgreSQL', body: '<p><strong>Rol:</strong> Base de Datos.</p><p><strong>Por qué fue elegido:</strong> Es una base de datos relacional de código abierto, potente, fiable y con excelentes capacidades para manejar datos textuales y realizar consultas complejas, lo que la hace perfecta para el maestro de materiales.</p>' },
+            'Docker': { title: 'Docker', body: '<p><strong>Rol:</strong> Contenerización y Despliegue.</p><p><strong>Por qué fue elegido:</strong> Permite empaquetar cada componente de la aplicación (backend, modelos) en contenedores aislados. Esto simplifica el despliegue, asegura la consistencia entre entornos y facilita la escalabilidad.</p>' },
+            'React': { title: 'React / Vue', body: '<p><strong>Rol:</strong> Frontend (Interfaz de Usuario).</p><p><strong>Por qué fue elegido:</strong> Son librerías de JavaScript líderes para construir interfaces de usuario interactivas y dinámicas. Permiten crear una experiencia de usuario fluida y profesional para el panel de control.</p>' },
+            'Scikit-learn': { title: 'Scikit-learn', body: '<p><strong>Rol:</strong> Librería de Machine Learning.</p><p><strong>Por qué fue elegido:</strong> Es la librería estándar de la industria en Python para Machine Learning. Proporciona implementaciones eficientes y bien documentadas de algoritmos como SVM y K-Means, además de herramientas para preprocesamiento y evaluación de modelos.</p>' }
+        };
+
+        // --- NAVIGATION ---
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        const mainSections = document.querySelectorAll('.main-content > section');
+
+        function switchView(hash) {
+            mainSections.forEach(section => {
+                section.classList.remove('active', 'section-fade-in');
+                if (`#${section.id}` === hash) {
+                    section.classList.add('active', 'section-fade-in');
+                }
+            });
+            sidebarLinks.forEach(link => {
+                link.classList.toggle('active', link.getAttribute('href') === hash);
+            });
+        }
+
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const hash = link.getAttribute('href');
+                window.location.hash = hash;
+                switchView(hash);
+            });
+        });
+        
+        // Initial view based on hash or default
+        const initialHash = window.location.hash || '#dashboard';
+        switchView(initialHash);
+
+        // --- CHARTS ---
+        const chartFontColor = '#334155'; // slate-700
+        Chart.defaults.color = chartFontColor;
+        Chart.defaults.borderColor = '#e2e8f0'; // slate-200
+
+        const efficiencyCtx = document.getElementById('efficiencyChart')?.getContext('2d');
+        if(efficiencyCtx) {
+            new Chart(efficiencyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Tiempo de Procesamiento (días-hombre)'],
+                    datasets: [
+                        { label: 'Manual', data: [15], backgroundColor: 'rgba(245, 158, 11, 0.6)', borderWidth: 1 },
+                        { label: 'Con IA', data: [5], backgroundColor: 'rgba(34, 197, 94, 0.6)', borderWidth: 1 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        const qualityCtx = document.getElementById('qualityChart')?.getContext('2d');
+        if(qualityCtx) {
+            new Chart(qualityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Precisión Clasificación', 'Detección Duplicados'],
+                    datasets: [{ data: [98, 99], backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(22, 163, 74, 0.7)'], hoverOffset: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        const riskCtx = document.getElementById('riskChart')?.getContext('2d');
+        if(riskCtx) {
+            new Chart(riskCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Riesgo Operativo', 'Riesgo Financiero', 'Riesgo de Datos', 'Ineficiencia', 'Costos de Inventario'],
+                    datasets: [
+                        { label: 'Sin Aurum', data: [9, 8, 8, 9, 7], fill: true, backgroundColor: 'rgba(239, 68, 68, 0.2)', borderColor: 'rgb(239, 68, 68)', pointBackgroundColor: 'rgb(239, 68, 68)' },
+                        { label: 'Con Aurum', data: [3, 2, 2, 3, 3], fill: true, backgroundColor: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgb(34, 197, 94)', pointBackgroundColor: 'rgb(34, 197, 94)' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { beginAtZero: true, max: 10 } } }
+            });
+        }
+
+        // --- TIMELINE INTERACTIVITY ---
+        const timelineContainer = document.getElementById('timeline-container');
+        const phaseDetailsContainer = document.getElementById('phase-details-container');
+
+        function updateTimelineDetails(phaseId) {
+            const data = phaseData[phaseId];
+            if (!data || !phaseDetailsContainer) return;
+
+            phaseDetailsContainer.innerHTML = `
+                <div class="section-fade-in">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-1">${data.title}</h3>
+                    <p class="text-sm font-semibold text-amber-600 mb-4">Duración Estimada: ${data.duration}</p>
+                    <p class="text-slate-600 mb-4"><strong>Objetivo:</strong> ${data.objective}</p>
+                    <strong class="block mb-2 font-semibold">Actividades Clave:</strong>
+                    <ul class="list-disc list-inside space-y-2 mb-4 text-slate-700">
+                        ${data.activities.map(activity => `<li>${activity}</li>`).join('')}
+                    </ul>
+                    <div class="bg-slate-100 p-3 rounded-lg">
+                        <strong class="font-semibold">Entregable Principal:</strong> ${data.deliverable}
+                    </div>
+                </div>
+            `;
+
+            document.querySelectorAll('.timeline-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.phase === phaseId);
+            });
+        }
+
+        if (timelineContainer) {
+            Object.keys(phaseData).forEach(phaseId => {
+                const phase = phaseData[phaseId];
+                const item = document.createElement('div');
+                item.className = 'timeline-item relative pl-8 pb-8 cursor-pointer';
+                item.dataset.phase = phaseId;
+                item.innerHTML = `
+                    <div class="timeline-dot absolute w-4 h-4 bg-slate-300 rounded-full -left-2 top-1"></div>
+                    <p class="font-bold text-slate-700">${phase.title}</p>
+                    <p class="text-sm text-slate-500">${phase.duration}</p>
+                `;
+                item.addEventListener('click', () => updateTimelineDetails(phaseId));
+                timelineContainer.appendChild(item);
+            });
+            updateTimelineDetails('1'); // Initialize with first phase
+        }
+
+        // --- MODAL INTERACTIVITY ---
+        const modal = document.getElementById('tech-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalClose = document.getElementById('modal-close');
+        const techCards = document.querySelectorAll('.tech-card');
+
+        function showModal(techId) {
+            const data = techData[techId];
+            if (!data || !modal) return;
+            modalTitle.textContent = data.title;
+            modalBody.innerHTML = data.body;
+            modal.classList.add('visible');
+        }
+
+        function hideModal() {
+            if(modal) modal.classList.remove('visible');
+        }
+
+        techCards.forEach(card => {
+            card.addEventListener('click', () => showModal(card.dataset.tech));
+        });
+
+        if(modal) modal.addEventListener('click', (e) => { if (e.target === modal) hideModal(); });
+        if(modalClose) modalClose.addEventListener('click', hideModal);
+
+    });
+    </script>
+</body>
+</html>
